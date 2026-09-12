@@ -100,14 +100,26 @@ function CrawledData() {
           <CardTitle className="min-w-0 truncate text-sm font-semibold">
             {isLoading ? "Loading records…" : `${rows.length} captured records`}
           </CardTitle>
-          <div className="relative w-full max-w-64 shrink-0">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Filter by URL…"
-              className="pl-9"
-            />
+          <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
+            <div className="relative w-full max-w-64">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Filter by URL…"
+                className="pl-9"
+              />
+            </div>
+            <Button
+              variant="default"
+              size="sm"
+              className="gap-1.5 whitespace-nowrap"
+              disabled={(data ?? []).length === 0}
+              onClick={handleExport}
+            >
+              <Download className="size-3.5" />
+              Export Data
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
