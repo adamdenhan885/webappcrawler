@@ -28,4 +28,5 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: node crawler.js
+        # Memicu node secara langsung dengan path relatif yang tegas (./)
+        run: node ./crawler.js
