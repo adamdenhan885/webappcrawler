@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-const OWNER = "adamdenhan885";
+const OWNER = "ojekapartmen-byte";
 const REPO = "webappcrawler";
 const WORKFLOW = "run-crawler.yml";
 
