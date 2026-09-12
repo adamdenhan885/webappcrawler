@@ -1,0 +1,31 @@
+name: Run Automate Robot Crawler
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Otomatis berjalan gratis setiap jam 12 malam
+  workflow_dispatch: # Memunculkan tombol "Run" manual di tab Actions GitHub
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install playwright @google/generative-ai @supabase/supabase-js
+
+      - name: Install Chrome Browser Virtual
+        run: npx playwright install --with-deps chromium
+
+      - name: Execute Robot Crawler
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: node crawler.js
