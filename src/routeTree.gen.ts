@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConfigurationRouteImport } from './routes/configuration'
+import { Route as CrawledDataRouteImport } from './routes/crawled-data'
 import { Route as LogsRouteImport } from './routes/logs'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const ConfigurationRoute = ConfigurationRouteImport.update({
   path: '/configuration',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrawledDataRoute = CrawledDataRouteImport.update({
+  id: '/crawled-data',
+  path: '/crawled-data',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LogsRoute = LogsRouteImport.update({
   id: '/logs',
   path: '/logs',
@@ -32,30 +38,34 @@ const LogsRoute = LogsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/configuration': typeof ConfigurationRoute
+  '/crawled-data': typeof CrawledDataRoute
   '/logs': typeof LogsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/configuration': typeof ConfigurationRoute
+  '/crawled-data': typeof CrawledDataRoute
   '/logs': typeof LogsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/configuration': typeof ConfigurationRoute
+  '/crawled-data': typeof CrawledDataRoute
   '/logs': typeof LogsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/configuration' | '/logs'
+  fullPaths: '/' | '/configuration' | '/crawled-data' | '/logs'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/configuration' | '/logs'
-  id: '__root__' | '/' | '/configuration' | '/logs'
+  to: '/' | '/configuration' | '/crawled-data' | '/logs'
+  id: '__root__' | '/' | '/configuration' | '/crawled-data' | '/logs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfigurationRoute: typeof ConfigurationRoute
+  CrawledDataRoute: typeof CrawledDataRoute
   LogsRoute: typeof LogsRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfigurationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crawled-data': {
+      id: '/crawled-data'
+      path: '/crawled-data'
+      fullPath: '/crawled-data'
+      preLoaderRoute: typeof CrawledDataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/logs': {
       id: '/logs'
       path: '/logs'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfigurationRoute: ConfigurationRoute,
+  CrawledDataRoute: CrawledDataRoute,
   LogsRoute: LogsRoute,
 }
 export const routeTree = rootRouteImport
