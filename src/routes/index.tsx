@@ -149,8 +149,9 @@ function Overview() {
                 Crawling Activity Over Time
               </CardTitle>
             </CardHeader>
-            <CardContent className="h-[19rem] pl-0">
-              <ResponsiveContainer width="100%" height="100%">
+            <CardContent className="pl-0">
+              <div className="h-[19rem] w-full">
+              <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={activityData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
                   <defs>
                     <linearGradient id="gPages" x1="0" y1="0" x2="0" y2="1">
@@ -185,6 +186,7 @@ function Overview() {
                   />
                 </AreaChart>
               </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
@@ -194,8 +196,9 @@ function Overview() {
                 HTML Page Size vs API Payload Size (KB)
               </CardTitle>
             </CardHeader>
-            <CardContent className="h-[19rem] pl-0">
-              <ResponsiveContainer width="100%" height="100%">
+            <CardContent className="pl-0">
+              <div className="h-[19rem] w-full">
+              <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={payloadData} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                   <XAxis dataKey="target" {...axisProps} interval={0} angle={-20} height={50} dy={10} />
@@ -206,6 +209,7 @@ function Overview() {
                   <Bar dataKey="api" name="Backend API" fill="var(--chart-3)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
         </section>
