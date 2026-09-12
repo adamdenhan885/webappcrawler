@@ -1,5 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { triggerCrawler } from "@/lib/crawler.functions";
 import {
   LayoutDashboard,
   Database,
@@ -115,14 +118,30 @@ export function DashboardShell({
 }) {
   const [state, setState] = useState<CrawlerState>("Idle");
   const [running, setRunning] = useState(false);
+  const trigger = useServerFn(triggerCrawler);
 
-  const runCrawler = () => {
+  const runCrawler = async () => {
     setRunning(true);
     setState("Running");
-    window.setTimeout(() => {
+    try {
+      const result = await trigger();
+      if (result.ok) {
+        toast.success("Crawler started", {
+          description: "The crawler workflow was triggered successfully.",
+        });
+        window.setTimeout(() => setState("Idle"), 4000);
+      } else {
+        setState("Failed");
+        toast.error("Could not start the crawler", { description: result.error });
+      }
+    } catch (error) {
+      setState("Failed");
+      toast.error("Could not start the crawler", {
+        description: error instanceof Error ? error.message : "Unexpected error.",
+      });
+    } finally {
       setRunning(false);
-      setState("Idle");
-    }, 2600);
+    }
   };
 
   return (
