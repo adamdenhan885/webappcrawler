@@ -90,6 +90,13 @@ function CrawledData() {
     r.target_url.toLowerCase().includes(query.toLowerCase()),
   );
 
+  const handleExport = () => {
+    const records = data ?? [];
+    if (records.length === 0) return;
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    downloadCsv(`crawler-logs-${stamp}.csv`, toCsv(records));
+  };
+
   return (
     <DashboardShell
       title="Crawled Data"
