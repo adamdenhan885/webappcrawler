@@ -15,7 +15,8 @@ jobs:
       - name: Setup Node.js runtime
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Diperbarui ke versi 22 untuk mendukung Native WebSocket Supabase
+          node-version: '22'
 
       - name: Install Dependencies
         run: npm install playwright @google/generative-ai @supabase/supabase-js
@@ -28,5 +29,4 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        # Memicu node secara langsung dengan path relatif yang tegas (./)
         run: node ./crawler.js
