@@ -1,31 +1,43 @@
-name: Run Automate Robot Crawler
+const { chromium } = require('playwright');
+const { GoogleGenAI } = require('@google/generative-ai');
+const { createClient } = require('@supabase/supabase-js');
 
-on:
-  schedule:
-    - cron: '0 0 * * *' # Otomatis berjalan gratis setiap jam 12 malam
-  workflow_dispatch: # Memunculkan tombol "Run" manual di tab Actions GitHub
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-jobs:
-  run-bot:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository code
-        uses: actions/checkout@v4
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext();
+  const page = await context.newPage();
 
-      - name: Setup Node.js runtime
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+  try {
+    console.log('Memulai proses login otomatis...');
+    await page.goto('https://example.com', { waitUntil: 'networkidle' }); // Ganti URL ini
+    
+    await page.fill('input[type="email"]', 'email_bot@example.com'); // Ganti selector jika perlu
+    await page.fill('input[type="password"]', 'PasswordBot123!');
+    
+    await Promise.all([
+      page.click('button[type="submit"]'),
+      page.waitForNavigation({ waitUntil: 'networkidle' })
+    ]);
+    console.log('Login Berhasil!');
 
-      - name: Install Dependencies
-        run: npm install playwright @google/generative-ai @supabase/supabase-js
+    // Sesi ambil data
+    await page.goto('https://example.com', { waitUntil: 'networkidle' }); // Ganti URL ini
+    const dashboardHtml = await page.content();
 
-      - name: Install Chrome Browser Virtual
-        run: npx playwright install --with-deps chromium
+    // Kirim data ke database Supabase agar masuk ke Lovable
+    const { error } = await supabase
+      .from('crawler_logs') // Pastikan nama tabel ini sesuai di Supabase kamu
+      .insert([{ timestamp: new Date(), target_url: page.url(), status_code: 200, data_type: 'HTML', raw_json: JSON.stringify({ html: dashboardHtml }) }]);
 
-      - name: Execute Robot Crawler
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: node crawler.js
+    if (error) throw error;
+    console.log('Data masuk ke Supabase!');
+
+  } catch (err) {
+    console.error('Robot Error:', err.message);
+  } finally {
+    await browser.close();
+  }
+})();
