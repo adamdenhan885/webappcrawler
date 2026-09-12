@@ -66,7 +66,7 @@ function CrawledData() {
       description="Frontend HTML documents and backend API JSON responses"
     >
       <Card className="panel-surface min-w-0 border-border/70">
-        <CardHeader className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
+        <CardHeader className="!flex flex-col items-start gap-3 sm:!flex-row sm:items-center sm:justify-between">
           <CardTitle className="min-w-0 truncate text-sm font-semibold">
             {rows.length} captured requests
           </CardTitle>
