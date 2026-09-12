@@ -1,19 +1,22 @@
-import { chromium } from 'playwright';
-import { GoogleGenAI } from '@google/generative-ai';
+// 1. Perbaikan Sintaksis Impor Pustaka Sesuai Standar Proyek
+import playwright from 'playwright';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// 2. Inisialisasi Kunci API Pustaka
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  // Menggunakan 'playwright.chromium' sesuai dengan 'import playwright'
+  const browser = await playwright.chromium.launch({ headless: true });
   const context = await browser.newContext();
   const page = await context.newPage();
 
   try {
     console.log('Mengambil konfigurasi target terbaru dari Supabase...');
     
-    // 1. Ambil baris konfigurasi terakhir yang diinput dari form Lovable
+    // Ambil konfigurasi URL & Akun dari tabel form manual Lovable
     const { data: config, error: configError } = await supabase
       .from('crawler_config')
       .select('*')
@@ -26,14 +29,11 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
 
     console.log(`Target ditemukan! Mencoba login ke: ${config.login_url}`);
 
-    // 2. Jalankan proses LOGIN menggunakan data dinamis dari form
+    // Proses LOGIN Otomatis
     await page.goto(config.login_url, { waitUntil: 'networkidle' });
-    
-    // Robot otomatis mencari input email dan password secara pintar berdasarkan tipe elemen
     await page.fill('input[type="email"], input[name*="user"], input[name*="email"]', config.target_email);
     await page.fill('input[type="password"]', config.target_password);
     
-    // Mencoba klik tombol submit/login
     const loginButton = page.locator('button[type="submit"], button:has-text("Login"), button:has-text("Masuk"), input[type="submit"]');
     await Promise.all([
       loginButton.first().click(),
@@ -42,10 +42,9 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
     
     console.log(`Login berhasil! Berpindah ke target dashboard: ${config.dashboard_url}`);
 
-    // 3. Jalankan proses CRAWLING ke URL dashboard pilihanmu
+    // Proses CRAWLING Data Frontend & API Backend
     const dataMentah = { html: '', apis: [] };
 
-    // Cegat lalu lintas API Backend (XHR/Fetch JSON) selama navigasi
     page.on('response', async (res) => {
       if (res.headers()['content-type']?.includes('application/json')) {
         try {
@@ -59,16 +58,16 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
     });
 
     await page.goto(config.dashboard_url, { waitUntil: 'networkidle' });
-    dataMentah.html = await page.content(); // Ambil isi frontend
+    dataMentah.html = await page.content();
 
-    // 4. Proses pembersihan data dengan AI Gemini gratis
+    // Optimasi Data dengan Gemini AI Flash
     console.log('Mengirim ke Gemini AI untuk ekstraksi dashboard...');
-    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const promptGemini = `Ekstrak info esensial menjadi JSON bersih dari data mentah ini: ${JSON.stringify(dataMentah).substring(0, 40000)}`;
     const aiResponse = await model.generateContent(promptGemini);
     const dataBersih = aiResponse.response.text();
 
-    // 5. Kirim data hasil akhir ke tabel log agar muncul di dashboard Lovable
+    // Kirim Hasil Akhir ke Tabel Log Supabase
     const { error: logError } = await supabase
       .from('crawler_logs')
       .insert([
@@ -86,7 +85,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
 
   } catch (err) {
     console.error('Robot Error:', err.message);
-  } finally {
+  } final {
     await browser.close();
   }
 })();
