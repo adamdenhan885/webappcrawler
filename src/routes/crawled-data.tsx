@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { Braces, Search } from "lucide-react";
 
 import { DashboardShell } from "@/components/dashboard-shell";
@@ -21,11 +22,21 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { crawlRows, type CrawlRow } from "@/lib/mock-data";
+import { getCrawlerLogs, type CrawlerLog } from "@/lib/crawler-logs.functions";
 import { cn } from "@/lib/utils";
+
+const logsQueryOptions = () =>
+  queryOptions({
+    queryKey: ["crawler_logs"],
+    queryFn: () => getCrawlerLogs(),
+    refetchInterval: 15000,
+  });
 
 export const Route = createFileRoute("/crawled-data")({
   component: CrawledData,
+  loader: ({ context }) => {
+    context.queryClient.ensureQueryData(logsQueryOptions());
+  },
   head: () => ({
     meta: [
       { title: "Crawled Data | Crawler Ops" },
@@ -45,30 +56,48 @@ export const Route = createFileRoute("/crawled-data")({
   }),
 });
 
-function statusClass(status: number) {
+function statusClass(status: number | null) {
+  if (status === null) return "bg-muted text-muted-foreground border-border";
   if (status < 300) return "bg-success/10 text-success border-success/30";
   if (status < 400) return "bg-info/10 text-info border-info/30";
   if (status < 500) return "bg-warning/10 text-warning border-warning/30";
   return "bg-destructive/10 text-destructive border-destructive/30";
 }
 
+function formatTimestamp(value: string | null) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toISOString().slice(0, 19).replace("T", " ");
+}
+
+function prettyJson(raw: string | null) {
+  if (!raw) return "No payload recorded.";
+  try {
+    return JSON.stringify(JSON.parse(raw), null, 2);
+  } catch {
+    return raw;
+  }
+}
+
 function CrawledData() {
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<CrawlRow | null>(null);
+  const [selected, setSelected] = useState<CrawlerLog | null>(null);
+  const { data, isLoading, isError, error } = useQuery(logsQueryOptions());
 
-  const rows = crawlRows.filter((r) =>
-    r.url.toLowerCase().includes(query.toLowerCase()),
+  const rows = (data ?? []).filter((r) =>
+    r.target_url.toLowerCase().includes(query.toLowerCase()),
   );
 
   return (
     <DashboardShell
       title="Crawled Data"
-      description="Frontend HTML documents and backend API JSON responses"
+      description="Live crawl records captured by the automated crawler"
     >
       <Card className="panel-surface min-w-0 border-border/70">
         <CardHeader className="!flex flex-col items-start gap-3 sm:!flex-row sm:items-center sm:justify-between">
           <CardTitle className="min-w-0 truncate text-sm font-semibold">
-            {rows.length} captured requests
+            {isLoading ? "Loading records…" : `${rows.length} captured records`}
           </CardTitle>
           <div className="relative w-full max-w-64 shrink-0">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -87,46 +116,47 @@ function CrawledData() {
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="whitespace-nowrap">Timestamp</TableHead>
                   <TableHead>Target URL</TableHead>
-                  <TableHead>Type</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Data</TableHead>
+                  <TableHead>Data Type</TableHead>
                   <TableHead className="text-right">Payload</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {isError && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-10 text-center text-sm text-destructive">
+                      Could not load records: {(error as Error)?.message}
+                    </TableCell>
+                  </TableRow>
+                )}
+                {!isError && !isLoading && rows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
+                      No crawl records yet. Run the crawler to collect data.
+                    </TableCell>
+                  </TableRow>
+                )}
                 {rows.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell className="whitespace-nowrap font-mono text-xs text-muted-foreground">
-                      {row.timestamp}
+                      {formatTimestamp(row.timestamp)}
                     </TableCell>
                     <TableCell className="max-w-80 truncate font-mono text-xs">
-                      {row.url}
-                    </TableCell>
-                    <TableCell>
-                      <span className="rounded border border-border bg-muted px-2 py-0.5 font-mono text-[11px]">
-                        {row.method}
-                      </span>
+                      {row.target_url}
                     </TableCell>
                     <TableCell>
                       <span
                         className={cn(
                           "rounded border px-2 py-0.5 font-mono text-[11px]",
-                          statusClass(row.status),
+                          statusClass(row.status_code),
                         )}
                       >
-                        {row.status}
+                        {row.status_code ?? "—"}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <span
-                        className={cn(
-                          "whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs",
-                          row.type === "Frontend"
-                            ? "bg-primary/10 text-primary"
-                            : "bg-chart-5/10 text-chart-5",
-                        )}
-                      >
-                        {row.type}
+                      <span className="whitespace-nowrap rounded-full bg-primary/10 px-2.5 py-0.5 text-xs text-primary">
+                        {row.data_type ?? "Unknown"}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
@@ -153,21 +183,21 @@ function CrawledData() {
           <SheetHeader>
             <SheetTitle>Raw response body</SheetTitle>
             <SheetDescription className="break-all font-mono text-xs">
-              {selected?.method} {selected?.url}
+              {selected?.target_url}
             </SheetDescription>
           </SheetHeader>
           <div className="min-h-0 flex-1 overflow-auto px-4 pb-6">
-            <pre className="rounded-lg border border-border/70 bg-background/60 p-4 font-mono text-xs leading-relaxed">
-              {selected ? JSON.stringify(selected.payload, null, 2) : ""}
+            <pre className="whitespace-pre-wrap break-words rounded-lg border border-border/70 bg-background/60 p-4 font-mono text-xs leading-relaxed">
+              {selected ? prettyJson(selected.raw_json) : ""}
             </pre>
             <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
               <div className="rounded-lg border border-border/70 bg-background/50 px-3 py-2">
                 <p className="text-muted-foreground">Status</p>
-                <p className="font-medium">{selected?.status}</p>
+                <p className="font-medium">{selected?.status_code ?? "—"}</p>
               </div>
               <div className="rounded-lg border border-border/70 bg-background/50 px-3 py-2">
-                <p className="text-muted-foreground">Size</p>
-                <p className="font-medium">{selected?.sizeKb} KB</p>
+                <p className="text-muted-foreground">Data type</p>
+                <p className="font-medium">{selected?.data_type ?? "Unknown"}</p>
               </div>
             </div>
           </div>

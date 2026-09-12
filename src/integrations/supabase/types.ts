@@ -14,7 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      crawler_logs: {
+        Row: {
+          created_at: string
+          data_type: string | null
+          id: number
+          raw_json: string | null
+          status_code: number | null
+          target_url: string
+          timestamp: string
+        }
+        Insert: {
+          created_at?: string
+          data_type?: string | null
+          id?: number
+          raw_json?: string | null
+          status_code?: number | null
+          target_url: string
+          timestamp?: string
+        }
+        Update: {
+          created_at?: string
+          data_type?: string | null
+          id?: number
+          raw_json?: string | null
+          status_code?: number | null
+          target_url?: string
+          timestamp?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
