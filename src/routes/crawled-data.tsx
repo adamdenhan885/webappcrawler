@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { Braces, Search } from "lucide-react";
+import { Braces, Download, Search } from "lucide-react";
 
 import { DashboardShell } from "@/components/dashboard-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +23,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { getCrawlerLogs, type CrawlerLog } from "@/lib/crawler-logs.functions";
+import { downloadCsv, toCsv } from "@/lib/raw-json";
 import { cn } from "@/lib/utils";
 
 const logsQueryOptions = () =>
@@ -89,6 +90,13 @@ function CrawledData() {
     r.target_url.toLowerCase().includes(query.toLowerCase()),
   );
 
+  const handleExport = () => {
+    const records = data ?? [];
+    if (records.length === 0) return;
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    downloadCsv(`crawler-logs-${stamp}.csv`, toCsv(records));
+  };
+
   return (
     <DashboardShell
       title="Crawled Data"
@@ -99,14 +107,26 @@ function CrawledData() {
           <CardTitle className="min-w-0 truncate text-sm font-semibold">
             {isLoading ? "Loading records…" : `${rows.length} captured records`}
           </CardTitle>
-          <div className="relative w-full max-w-64 shrink-0">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Filter by URL…"
-              className="pl-9"
-            />
+          <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
+            <div className="relative w-full max-w-64">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Filter by URL…"
+                className="pl-9"
+              />
+            </div>
+            <Button
+              variant="default"
+              size="sm"
+              className="gap-1.5 whitespace-nowrap"
+              disabled={(data ?? []).length === 0}
+              onClick={handleExport}
+            >
+              <Download className="size-3.5" />
+              Export Data
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
