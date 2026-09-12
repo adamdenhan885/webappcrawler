@@ -23,6 +23,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { getCrawlerLogs, type CrawlerLog } from "@/lib/crawler-logs.functions";
+import { downloadCsv, toCsv } from "@/lib/raw-json";
 import { cn } from "@/lib/utils";
 
 const logsQueryOptions = () =>
