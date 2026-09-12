@@ -163,7 +163,7 @@ export function activityByDay(logs: CrawlerLog[]) {
 }
 
 export function toCsv(logs: CrawlerLog[]): string {
-  const flattened = logs.map((log) => ({
+  const flattened: Record<string, string>[] = logs.map((log) => ({
     id: String(log.id),
     timestamp: log.timestamp ?? "",
     target_url: log.target_url,
