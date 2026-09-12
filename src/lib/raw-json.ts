@@ -51,7 +51,7 @@ export function flatten(
 }
 
 export function humanizeKey(key: string): string {
-  const last = key.split(".").pop() ?? key;
+  const last = key.split(".").slice(-2).join(" ");
   return last
     .replace(/[_-]+/g, " ")
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
