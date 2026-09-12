@@ -109,7 +109,7 @@ function Overview() {
             <Card key={s.label} className="panel-surface min-w-0 border-border/70">
               <CardContent className="p-5">
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
-                  <p className="min-w-0 truncate text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <p className="min-w-0 text-xs font-medium uppercase leading-snug tracking-wider text-muted-foreground">
                     {s.label}
                   </p>
                   <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
