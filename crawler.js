@@ -1,14 +1,14 @@
-// 1. Perbaikan Sintaksis Impor Pustaka Sesuai Standar Proyek
+// 1. Impor Pustaka Resmi Utama
 import playwright from 'playwright';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
 
-// 2. Inisialisasi Kunci API Pustaka
-const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+// 2. Inisialisasi API Google AI Studio & Database Supabase
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const supabase = createClient(process.env.SUPABASE_URL || '', process.env.SUPABASE_ANON_KEY || '');
 
 (async () => {
-  // Menggunakan 'playwright.chromium' sesuai dengan 'import playwright'
+  // Menggunakan 'playwright.chromium' untuk membuka browser virtual secara rahasia
   const browser = await playwright.chromium.launch({ headless: true });
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -16,7 +16,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
   try {
     console.log('Mengambil konfigurasi target terbaru dari Supabase...');
     
-    // Ambil konfigurasi URL & Akun dari tabel form manual Lovable
+    // Ambil baris konfigurasi URL & Akun yang kamu input dari form manual Lovable
     const { data: config, error: configError } = await supabase
       .from('crawler_config')
       .select('*')
@@ -29,7 +29,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
 
     console.log(`Target ditemukan! Mencoba login ke: ${config.login_url}`);
 
-    // Proses LOGIN Otomatis
+    // Proses LOGIN Otomatis pada target pilihanmu
     await page.goto(config.login_url, { waitUntil: 'networkidle' });
     await page.fill('input[type="email"], input[name*="user"], input[name*="email"]', config.target_email);
     await page.fill('input[type="password"]', config.target_password);
@@ -42,7 +42,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
     
     console.log(`Login berhasil! Berpindah ke target dashboard: ${config.dashboard_url}`);
 
-    // Proses CRAWLING Data Frontend & API Backend
+    // Proses CRAWLING Data Struktur Frontend (HTML) & API Lalu Lintas Backend (JSON)
     const dataMentah = { html: '', apis: [] };
 
     page.on('response', async (res) => {
@@ -60,14 +60,14 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
     await page.goto(config.dashboard_url, { waitUntil: 'networkidle' });
     dataMentah.html = await page.content();
 
-    // Optimasi Data dengan Gemini AI Flash
+    // Mengubah data berantakan menjadi JSON rapi memanfaatkan Gemini AI secara gratis
     console.log('Mengirim ke Gemini AI untuk ekstraksi dashboard...');
-    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const promptGemini = `Ekstrak info esensial menjadi JSON bersih dari data mentah ini: ${JSON.stringify(dataMentah).substring(0, 40000)}`;
     const aiResponse = await model.generateContent(promptGemini);
     const dataBersih = aiResponse.response.text();
 
-    // Kirim Hasil Akhir ke Tabel Log Supabase
+    // Kirim Hasil Akhir ke Tabel Log Supabase agar langsung tampil di web Lovable kamu
     const { error: logError } = await supabase
       .from('crawler_logs')
       .insert([
@@ -85,7 +85,8 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
 
   } catch (err) {
     console.error('Robot Error:', err.message);
-  } final {
+  } finally {
+    // Penulisan block 'finally' sudah diperbaiki agar tidak memicu error syntax compiler
     await browser.close();
   }
 })();
